@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seller Level · 买家侧展示方案</title>
+<style>
+:root{
+  --ink:#1D2129; --ink2:#606A78; --ink3:#8A939F; --ink4:#B7BDC6;
+  --line:#E5E8EC; --line2:#EFF1F4;
+  --page:#F0F2F5; --sunk:#F7F8FA;
+  --brand:#F2662B; --blue:#3457D5; --blue-soft:#EBEFFC;
+  --good:#0E7A5E; --danger:#D0342C; --warn:#F5A623;
+  --note:#8A4FBF; --note-soft:#F4ECFB;
+  --t-starter:#6B7480; --t-starter-bg:#EDEFF2;
+  --t-growing:#2A63A8; --t-growing-bg:#E6EFF9;
+  --t-premium:#0E7A5E; --t-premium-bg:#E2F2EC;
+  --t-top:#96620F;     --t-top-bg:#FAF0DA;
+  --t-elite:#6B4FA8;   --t-elite-bg:#F0EAFA;
+  --fs:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--fs);background:var(--page);color:var(--ink);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+.num{font-variant-numeric:tabular-nums}
+
+/* shell */
+.shell{display:flex;min-height:100vh}
+.rail{width:238px;flex:none;background:#1D2129;color:#fff;padding:22px 0 40px;position:sticky;top:0;height:100vh;overflow:auto}
+.rail-hd{padding:0 20px 16px}
+.rail-eyebrow{font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:#79828E}
+.rail-ttl{font-size:15.5px;font-weight:600;margin-top:6px}
+.rail-sub{font-size:12px;color:#89929D;margin-top:5px;line-height:1.6}
+.rail-grp{font-size:10.5px;letter-spacing:.13em;color:#6B7480;padding:16px 20px 6px;text-transform:uppercase}
+.rail-btn{display:flex;gap:9px;align-items:center;width:100%;text-align:left;background:none;border:0;color:#C4CAD2;padding:9px 20px;font-size:13.5px;border-left:2px solid transparent}
+.rail-btn:hover{background:#252A32;color:#fff}
+.rail-btn.on{background:#2B313A;color:#fff;border-left-color:var(--brand)}
+.rail-btn .n{font-family:var(--mono);font-size:10.5px;color:#79828E;flex:none;width:16px}
+.rail-btn.on .n{color:var(--brand)}
+.rv{margin-left:auto;font-size:10px;padding:1px 5px;border-radius:3px;flex:none}
+.v-yes{background:rgba(63,214,164,.16);color:#3FD6A4}
+.v-no{background:rgba(255,255,255,.09);color:#8A939F}
+
+.stage{flex:1;min-width:0;padding:26px 30px 90px}
+.wrap{max-width:1180px;margin:0 auto}
+.stage-k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+.stage-t{font-size:21px;font-weight:600;margin-top:5px}
+.stage-d{color:var(--ink2);font-size:13.5px;margin:8px 0 20px;max-width:860px;line-height:1.85}
+.stage-d b{color:var(--ink)}
+
+.ctl{max-width:1180px;margin:0 auto 20px;background:#fff;border-radius:10px;padding:11px 16px;display:flex;gap:24px;flex-wrap:wrap;align-items:center}
+.ctl-l{font-size:11.5px;color:var(--ink3)}
+.seg{display:inline-flex;background:var(--sunk);border:1px solid var(--line);border-radius:7px;padding:2px}
+.seg button{border:0;background:none;padding:4px 10px;font-size:12px;border-radius:5px;color:var(--ink2)}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08);font-weight:600}
+.ctl-note{font-size:11.5px;color:var(--ink4)}
+.view{display:none}.view.on{display:block}
+
+.wcard{background:#fff;border-radius:10px;padding:18px 20px;margin-bottom:14px}
+.wtitle{font-size:14.5px;font-weight:600}
+.hr{height:1px;background:var(--line2);margin:12px 0 14px}
+.p{color:var(--ink2);font-size:13.5px;line-height:1.85;margin:0 0 9px}
+.p b{color:var(--ink)}.p:last-child{margin-bottom:0}
+.mono{font-family:var(--mono);font-size:11.5px;background:var(--sunk);border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+table.sp{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;font-size:13px;margin-bottom:14px}
+table.sp th{text-align:left;background:#1D2129;color:#fff;font-weight:500;font-size:12px;padding:11px 14px}
+table.sp td{padding:11px 14px;border-bottom:1px solid var(--line2);vertical-align:top;color:var(--ink2);line-height:1.7}
+table.sp td:first-child{color:var(--ink);font-weight:500}
+table.sp tr:last-child td{border-bottom:0}
+.yes{color:var(--good);font-weight:600;white-space:nowrap}
+.no{color:var(--ink3);font-weight:600;white-space:nowrap}
+.callout{background:var(--blue-soft);border-left:3px solid var(--blue);padding:12px 15px;border-radius:0 6px 6px 0;margin:14px 0;font-size:13px;line-height:1.8;color:#22315E}
+.callout.warn{background:#FEF4E6;border-left-color:var(--warn);color:#6B4A08}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* ===== 徽章：颜色 = 段位，数字 = 等级 ===== */
+.lvb{display:inline-flex;align-items:center;border-radius:5px;padding:1px 6px;font-size:11.5px;font-weight:700;line-height:1.55;font-variant-numeric:tabular-nums;white-space:nowrap;vertical-align:middle}
+.lvb.lg{font-size:13px;padding:3px 9px;border-radius:6px}
+.lvb .tn{font-weight:600;margin-right:5px}
+.t-starter{background:var(--t-starter-bg);color:var(--t-starter)}
+.t-growing{background:var(--t-growing-bg);color:var(--t-growing)}
+.t-premium{background:var(--t-premium-bg);color:var(--t-premium)}
+.t-top{background:var(--t-top-bg);color:var(--t-top)}
+.t-elite{background:var(--t-elite-bg);color:var(--t-elite)}
+.dark .t-starter{background:rgba(168,176,188,.15);color:#A8B0BC}
+.dark .t-growing{background:rgba(58,120,220,.20);color:#6FA8FF}
+.dark .t-premium{background:rgba(14,140,105,.22);color:#3FD6A4}
+.dark .t-top{background:rgba(214,150,40,.20);color:#F0B54A}
+.dark .t-elite{background:rgba(140,100,220,.24);color:#B698F0}
+
+/* mock 容器 */
+.pcrow{display:grid;grid-template-columns:minmax(0,1fr) 344px;gap:18px;align-items:start;margin-bottom:6px}
+@media(max-width:1180px){.pcrow{grid-template-columns:1fr}}
+.mlabel{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.mock{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.mock.dark{border-color:#2A2F38}
+.mbar{background:#E9ECF0;padding:6px 12px;display:flex;gap:6px;align-items:center}
+.mbar i{width:8px;height:8px;border-radius:50%;background:#C6CCD4;display:block}
+.mbar u{margin-left:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink3);background:#fff;border-radius:4px;padding:1px 8px;text-decoration:none}
+.mbody{padding:18px}
+.mock.dark .mbody{background:#1B1F27}
+.mock.dark .mbar{background:#22262E}
+.mock.dark .mbar u{background:#2A2F38;color:#8A939F}
+
+.phone{width:344px;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#fff}
+.phone .top{background:var(--sunk);padding:6px 14px;display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink3)}
+.pbody{padding:12px}
+.phone.dark{border-color:#2A2F38}
+.phone.dark .pbody{background:#1B1F27}
+.phone.dark .top{background:#22262E;color:#79828E}
+
+/* 深色面板 */
+.dpanel{background:#2C313A;border-radius:10px;padding:16px 18px;color:#E7EAEE}
+.dprice{font-size:24px;font-weight:700;color:#F2662B}
+.dprice small{font-size:12px;color:#98A0AB;font-weight:400}
+.dname{font-size:13px;color:#C9CFD7;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.chk{width:13px;height:13px;border-radius:50%;background:#1FA463;display:inline-grid;place-items:center;color:#fff;font-size:8px;flex:none}
+.dstat{display:inline-flex;gap:8px;background:#373D47;border-radius:20px;padding:2px 9px;font-size:11px;color:#C9CFD7;margin-top:6px}
+.dbtn{margin-top:14px;background:linear-gradient(90deg,#F5813A,#F2662B);color:#fff;border-radius:8px;text-align:center;padding:11px;font-weight:700;font-size:14px}
+.dmodal{background:#3A404A;border-radius:10px;border-top:2px solid #F2662B;overflow:hidden}
+.dmh{padding:12px 16px;font-size:14px;font-weight:600;color:#fff}
+.dmrow{display:grid;grid-template-columns:minmax(0,1.3fr) .8fr .7fr 88px;gap:12px;align-items:center;padding:11px 16px;border-top:1px solid rgba(255,255,255,.07)}
+.dmn{display:flex;align-items:center;gap:6px;color:#fff;font-size:13px;font-weight:600;flex-wrap:wrap}
+.dmsub{font-size:10.5px;color:#3FD6A4;margin-top:2px}
+.dmmt{font-size:11px;color:#C9CFD7;line-height:1.65}
+.dmp{font-size:14px;color:#F2662B;font-weight:700}
+.dmb{background:linear-gradient(90deg,#F5813A,#F2662B);color:#fff;border-radius:6px;text-align:center;padding:7px 0;font-size:12px;font-weight:600}
+.sheet{background:#3A404A;border-radius:14px 14px 0 0;overflow:hidden;margin:-12px -12px -12px;padding-bottom:6px}
+
+/* 浅色卖家 */
+.sfeat{background:#FFF7F3;border:1px solid #FBD9C6;border-radius:10px;padding:14px 16px;position:relative;margin-bottom:12px}
+.ftag{position:absolute;top:-1px;right:-1px;background:#EF4B3C;color:#fff;font-size:10.5px;padding:2px 9px;border-radius:0 10px 0 8px;font-weight:600}
+.srow{display:grid;grid-template-columns:minmax(0,1.4fr) .85fr .95fr .8fr;gap:14px;align-items:center}
+.sid{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.sav{width:36px;height:36px;border-radius:8px;background:#EDF0F4;flex:none;display:grid;place-items:center;font-size:13px}
+.snm{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px;flex-wrap:wrap}
+.smeta{font-size:11.5px;color:var(--ink3);margin-top:2px}
+.ssk{font-size:11px;color:var(--ink3)}
+.ssv{font-size:12.5px;margin-top:2px}
+.po{font-size:19px;font-weight:700}.po sup{font-size:11px;top:-.5em}
+.ps{font-size:11px;color:var(--ink3)}
+.buy{background:#F2662B;color:#fff;border-radius:7px;text-align:center;padding:9px;font-weight:700;font-size:13.5px}
+.buy.g{background:#fff;border:1px solid #F2662B;color:#F2662B}
+.thead{background:var(--sunk);padding:9px 16px;font-size:11.5px;color:var(--ink3);display:grid;grid-template-columns:minmax(0,1.4fr) .85fr .95fr .8fr;gap:14px}
+.trow{border-top:1px solid var(--line2);padding:12px 16px}
+.slist{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.h5card{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px}
+.h5top{display:flex;gap:10px;align-items:center}
+.h5kv{display:flex;justify-content:space-between;font-size:12px;color:var(--ink2);margin-top:8px}
+
+/* 卖家模块 */
+.sbox{border:1px solid var(--line);border-radius:10px;padding:15px 16px}
+.sbhd{display:flex;gap:11px;align-items:center}
+.sbav{width:42px;height:42px;border-radius:9px;background:#2C3E63;flex:none;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700}
+.sbnm{font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sbsince{font-size:11.5px;color:var(--ink3);margin-top:2px}
+.sbstore{margin-left:auto;border:1px solid #F2662B;color:#F2662B;border-radius:7px;padding:5px 11px;font-size:12px;flex:none}
+.sbrow{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line2);padding:11px 0;font-size:13px}
+.sbrow .k{color:var(--ink2)}
+.sbrow .v{font-weight:600;display:flex;align-items:center;gap:6px}
+
+/* 结算 / 订单 */
+.ocard{border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.oth{width:58px;height:42px;border-radius:6px;background:#3B2E6E;flex:none}
+.ot{font-size:13px;font-weight:600;line-height:1.5}
+.osold{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink2);margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.osold .av{width:18px;height:18px;border-radius:4px;background:#2C3E63;flex:none}
+.oft{display:flex;justify-content:space-between;border-top:1px solid var(--line2);margin-top:11px;padding-top:11px;font-size:13px}
+.ostatus{font-size:11.5px;color:var(--good);background:#E2F2EC;border-radius:4px;padding:1px 7px}
+
+/* 店铺页 */
+.shop{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.shopbanner{height:74px;background:linear-gradient(100deg,#2C3E63,#41567F)}
+.shophd{padding:0 18px 16px;display:flex;gap:14px;align-items:flex-end;margin-top:-24px}
+.shopav{width:64px;height:64px;border-radius:12px;background:#fff;border:2px solid #fff;display:grid;place-items:center;font-size:12px;font-weight:700;color:#2C3E63;flex:none}
+.shopnm{font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-bottom:2px}
+.shopstats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line2)}
+.shopstat{padding:14px 18px;border-right:1px solid var(--line2)}
+.shopstat:last-child{border-right:0}
+.shopstat .k{font-size:11.5px;color:var(--ink3)}
+.shopstat .v{font-size:17px;font-weight:600;margin-top:4px;display:flex;align-items:center;gap:7px}
+.shopstat.lv{background:var(--sunk)}
+.shopstat .lnk{font-size:11.5px;color:var(--brand);margin-top:3px;display:block}
+.h5stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line2);border-top:1px solid var(--line2)}
+.h5stats>div{background:#fff;padding:11px 13px}
+
+/* 标注 */
+.anno{position:relative}
+body.noteoff .pin{display:none}
+.pin{position:absolute;z-index:50;width:18px;height:18px;border-radius:50%;background:var(--note);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 1px 5px rgba(60,20,110,.35);top:-9px;left:-9px}
+body.noteon .anno[data-note]{outline:1.5px dashed rgba(138,79,191,.5);outline-offset:3px;border-radius:5px}
+.notelist{background:var(--note-soft);border:1px solid #E4D6F2;border-radius:10px;padding:14px 17px;margin:14px 0}
+.notelist h4{margin:0 0 9px;font-size:11px;color:var(--note);letter-spacing:.09em;text-transform:uppercase;font-weight:700}
+.notelist ol{margin:0;padding:0;list-style:none;counter-reset:n}
+.notelist li{position:relative;padding-left:26px;margin-bottom:7px;font-size:12.5px;line-height:1.75;color:#3B2D4B;counter-increment:n}
+.notelist li:last-child{margin-bottom:0}
+.notelist li::before{content:counter(n);position:absolute;left:0;top:3px;width:17px;height:17px;border-radius:50%;background:var(--note);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center}
+body.noteoff .notelist{display:none}
+
+@media(max-width:1080px){
+  .shell{flex-direction:column}.rail{position:static;width:100%;height:auto}
+  .stage{padding:18px 14px 60px}
+  .srow,.thead,.dmrow{grid-template-columns:1fr;gap:8px}
+  .grid2,.shopstats{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body class="noteon">
+<div class="shell">
+<nav class="rail">
+  <div class="rail-hd">
+    <div class="rail-eyebrow">Buyer side</div>
+    <div class="rail-ttl">Seller Level · 买家侧展示</div>
+    <div class="rail-sub">卖家侧规则不变。本方案只定义：等级在买家看到的哪些位置出现、哪些位置刻意不出现，PC 与 H5 各自怎么放。</div>
+  </div>
+  <div class="rail-grp">方案</div>
+  <button class="rail-btn on" data-v="matrix"><span class="n">00</span>位置总表</button>
+  <div class="rail-grp">逐页</div>
+  <button class="rail-btn" data-v="p1"><span class="n">01</span>金币老列表·面板<span class="rv v-yes">展示</span></button>
+  <button class="rail-btn" data-v="p2"><span class="n">02</span>金币老列表·弹窗<span class="rv v-yes">展示</span></button>
+  <button class="rail-btn" data-v="p3"><span class="n">03</span>金币列表页<span class="rv v-yes">展示</span></button>
+  <button class="rail-btn" data-v="p4"><span class="n">04</span>账号列表页<span class="rv v-no">不展示</span></button>
+  <button class="rail-btn" data-v="p5"><span class="n">05</span>账号详情页<span class="rv v-yes">展示</span></button>
+  <button class="rail-btn" data-v="p6"><span class="n">06</span>物品列表页<span class="rv v-no">不展示</span></button>
+  <button class="rail-btn" data-v="p7"><span class="n">07</span>物品标品详情<span class="rv v-yes">展示</span></button>
+  <button class="rail-btn" data-v="p10"><span class="n">08</span>卖家店铺页<span class="rv v-yes">展示</span></button>
+</nav>
+
+<main class="stage">
+  <div class="ctl">
+    <span class="ctl-l">预览段位</span>
+    <div class="seg" id="segLv">
+      <button data-lv="14">L14</button><button data-lv="27">L27</button>
+      <button data-lv="57" class="on">L57</button><button data-lv="120">L120</button><button data-lv="240">L240</button>
+    </div>
+    <span class="ctl-l">设计标注</span>
+    <div class="seg" id="segNote"><button data-note="on" class="on">显示</button><button data-note="off">隐藏</button></div>
+    <span class="ctl-note">切换段位可看同一位置在不同等级下的样子</span>
+  </div>
+
+<!-- ===== 01 ===== -->
+<section class="view on" id="v-matrix"><div class="wrap">
+  <div class="stage-k">00 · 位置总表</div>
+  <div class="stage-t">八个位置，展示六个</div>
+  <div class="stage-d">买家侧只看到一个带颜色的等级号：<b>颜色代表段位、数字代表等级，段位名不出现在徽章上</b>（卖家店铺页除外）。徽章无悬停浮层、无说明弹层。判断展示与否只有一条标准：这一屏里买家是不是正在<b>比较或确认「人」</b>。是就展示；不是，等级去参与排序权重，不占像素。</div>
+  <div class="wcard" style="padding:14px 20px">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:11.5px;color:var(--ink3)">五档颜色</span>
+      <span><span class="lvb t-starter">Lv.14</span><span style="font-size:11.5px;color:var(--ink3);margin-left:6px">Lv.1–20</span></span>
+      <span><span class="lvb t-growing">Lv.27</span><span style="font-size:11.5px;color:var(--ink3);margin-left:6px">Lv.21–50</span></span>
+      <span><span class="lvb t-premium">Lv.57</span><span style="font-size:11.5px;color:var(--ink3);margin-left:6px">Lv.51–100</span></span>
+      <span><span class="lvb t-top">Lv.120</span><span style="font-size:11.5px;color:var(--ink3);margin-left:6px">Lv.101–200</span></span>
+      <span><span class="lvb t-elite">Lv.240</span><span style="font-size:11.5px;color:var(--ink3);margin-left:6px">Lv.201+</span></span>
+      <span style="font-size:11.5px;color:var(--ink4)">具体色值交 UI，只锁一条：颜色随段位升高单调变化。深色页面用同色系深色底变体。</span>
+    </div>
+  </div>
+  <table class="sp">
+    <thead><tr><th style="width:19%">页面</th><th style="width:9%">结论</th><th style="width:25%">PC 位置</th><th style="width:25%">H5 位置</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>金币老列表页<br><span style="color:var(--ink3);font-weight:400;font-size:12px">右侧购买面板</span></td><td><span class="yes">展示</span></td><td>By {卖家名} 之后</td><td>底部购买栏的卖家行</td><td>单卖家结论区</td></tr>
+      <tr><td>金币老列表页<br><span style="color:var(--ink3);font-weight:400;font-size:12px">View All 弹窗</span></td><td><span class="yes">展示</span></td><td>卖家名之后（现在在名之前）</td><td>底部弹层，卖家名之后</td><td>全站比价密度最高的一屏</td></tr>
+      <tr><td>金币列表页</td><td><span class="yes">展示</span></td><td>推荐位 + 表格行的卖家名之后</td><td>卖家卡片首行</td><td>—</td></tr>
+      <tr><td>账号列表页</td><td><span class="no">不展示</span></td><td>—</td><td>—</td><td>卡片主语是账号不是卖家；等级改为参与 Best Match 权重</td></tr>
+      <tr><td>账号详情页</td><td><span class="yes">展示</span></td><td>卖家模块的店铺名之后</td><td>卖家卡片的店铺名之后</td><td>买家专门评估卖家的模块</td></tr>
+      <tr><td>物品列表页</td><td><span class="no">不展示</span></td><td>—</td><td>—</td><td>SPU 卡聚合多卖家（11 Offers），无法归属</td></tr>
+      <tr><td>物品标品详情页</td><td><span class="yes">展示</span></td><td>同金币列表页</td><td>同金币列表页</td><td>结构一致，复用同一套</td></tr>
+      <tr><td>卖家店铺页</td><td><span class="yes">展示</span></td><td>名字行 + 数据栏独立一项</td><td>名字行 + 数据宫格一项</td><td>不做成头像位的大徽章；数据栏内展示段位名 + 等级</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">全等级都露出，包括 Lv.1–20。因为徽章不带段位名，灰色的 <span class="lvb t-starter">Lv.14</span> 读起来是中性的，不构成对新卖家的劝退。<br>账号列表页和物品列表页不展示，不代表等级在这两页没用——它以<b>排序权重</b>的方式生效，决定同等条件下谁排在前面。这正是卖家侧「流量扶持」权益的落点。</div>
+</div></section>
+
+<!-- ===== p1 ===== -->
+<section class="view" id="v-p1"><div class="wrap">
+  <div class="stage-k">01 · 金币老列表页 · 购买面板</div>
+  <div class="stage-t">跟在 By {卖家名} 后面</div>
+  <div class="stage-d">这块面板已经是完整的卖家结论区：名字、认证标、好评率、递送时长、保证金。等级不需要新位置——前面三个讲的都是近期表现，等级补的是「做了多久、稳不稳」。</div>
+  <div class="pcrow">
+    <div><div class="mlabel">PC</div>
+      <div class="mock dark"><div class="mbar"><i></i><i></i><i></i><u>igv.com/dofus-kamas</u></div><div class="mbody dark">
+        <div class="dpanel" style="max-width:460px">
+          <div style="display:flex;justify-content:space-between;gap:14px">
+            <div><div class="dprice">$ 34.89 <small>/ 10000 K</small></div></div>
+            <div style="text-align:right">
+              <div class="dname anno" data-note="徽章紧跟认证标，读作「ibendouma，已认证，Lv.57」。三者是一句话，中间不加分隔符">By ibendouma <span class="chk">✓</span> <span class="lvb dyn"></span></div>
+              <div class="dstat">👍 97.84% · ⚡ 15 Min</div>
+            </div>
+          </div>
+          <div class="dbtn">🛡 Buy Now $ 34.89</div>
+        </div>
+      </div></div>
+    </div>
+    <div><div class="mlabel">H5</div>
+      <div class="phone dark"><div class="top"><span>9:41</span><span>▮▮▮</span></div><div class="pbody">
+        <div style="height:78px;border-radius:8px;background:#2C313A;display:grid;place-items:center;color:#5A6270;font-size:11px">商品图</div>
+        <div style="color:#C9CFD7;font-size:13px;margin-top:10px">Rétro 1.30-Boune · 10000 K</div>
+        <div style="margin-top:44px;border-top:1px solid #2A2F38;padding-top:10px" class="anno" data-note="H5 没有右侧面板，卖家信息压缩进底部购买栏上方一行：名字 + 认证 + 徽章 + 好评率，一行读完">
+          <div class="dname">By ibendouma <span class="chk">✓</span> <span class="lvb dyn"></span> <span style="color:#98A0AB">· 👍 97.84% · 15 Min</span></div>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:9px">
+            <div style="flex:none"><div class="dprice" style="font-size:19px">$34.89</div></div>
+            <div class="dbtn" style="flex:1;margin:0;padding:10px">Buy Now</div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  <div class="notelist"><h4>设计标注</h4><ol></ol></div>
+  <p class="p" style="max-width:860px">卖家名过长时，PC 端徽章整体换行右对齐；H5 端卖家名用省略号截断，<b>徽章不许被截掉</b>——截掉名字保留徽章，等于把结论挂在一个不完整的主语上。</p>
+</div></section>
+
+<!-- ===== p2 ===== -->
+<section class="view" id="v-p2"><div class="wrap">
+  <div class="stage-k">02 · 金币老列表页 · View All 弹窗</div>
+  <div class="stage-t">改位置、改配色，不改结构</div>
+  <div class="stage-d">六个卖家、同一个商品、价格差 14%，买家在这里唯一的问题是「贵的那几个凭什么贵」。这是整个方案里等级做功最多的一屏。徽章已经在了，需要改两件事：<b>从名字前移到名字后</b>（六行卖家名才能左对齐到同一基线），<b>配色改为随段位单调变化</b>。</div>
+  <div class="pcrow">
+    <div><div class="mlabel">PC</div>
+      <div class="mock dark"><div class="mbar"><i></i><i></i><i></i><u>igv.com/dofus-kamas</u></div><div class="mbody dark">
+        <div class="dmodal">
+          <div class="dmh">View All</div>
+          <div class="dmrow anno" data-note="卖家名左对齐到同一条基线，扫读顺序变成：先名字、再等级、再价格">
+            <div><div class="dmn">ibendouma <span class="chk">✓</span> <span class="lvb" data-lv="14"></span></div><div class="dmsub">Deposit Secured</div></div>
+            <div class="dmmt">👍 97.84%<br>⚡ 15 Min</div><div class="dmp">$34.89</div><div class="dmb">Buy Now</div>
+          </div>
+          <div class="dmrow">
+            <div><div class="dmn">Uber Game <span class="chk">✓</span> <span class="lvb" data-lv="16"></span></div><div class="dmsub">Deposit Secured</div></div>
+            <div class="dmmt">👍 99.00%<br>⚡ 24 Hours</div><div class="dmp">$37.02</div><div class="dmb">Buy Now</div>
+          </div>
+          <div class="dmrow anno" data-note="颜色本身就是排序：灰 → 蓝 → 绿 → 金 → 紫。买家不用记数字区间也能看出档位差">
+            <div><div class="dmn">GamerVault <span class="chk">✓</span> <span class="lvb" data-lv="27"></span></div><div class="dmsub">Deposit Secured</div></div>
+            <div class="dmmt">👍 98.58%<br>⚡ 15 Min</div><div class="dmp">$39.69</div><div class="dmb">Buy Now</div>
+          </div>
+          <div class="dmrow">
+            <div><div class="dmn">TheFlash24.7 <span class="chk">✓</span> <span class="lvb" data-lv="120"></span></div><div class="dmsub">Deposit Secured</div></div>
+            <div class="dmmt">👍 98.65%<br>⚡ 10 Min</div><div class="dmp">$41.10</div><div class="dmb">Buy Now</div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <div><div class="mlabel">H5</div>
+      <div class="phone dark"><div class="top"><span>9:41</span><span>▮▮▮</span></div><div class="pbody">
+        <div style="height:60px"></div>
+        <div class="sheet anno" data-note="H5 改成底部弹层。一行放不下四列，拆成两行：上行卖家名 + 徽章，下行好评率与时长；价格和按钮固定在右侧">
+          <div class="dmh" style="font-size:13.5px">View All</div>
+          <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:10px;align-items:center">
+            <div style="flex:1;min-width:0">
+              <div class="dmn" style="font-size:12.5px">ibendouma <span class="chk">✓</span> <span class="lvb" data-lv="14"></span></div>
+              <div class="dmmt" style="margin-top:3px">👍 97.84% · ⚡ 15 Min</div>
+            </div>
+            <div style="text-align:right;flex:none"><div class="dmp" style="font-size:13px">$34.89</div><div class="dmb" style="margin-top:4px;padding:5px 12px;font-size:11px">Buy</div></div>
+          </div>
+          <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:10px;align-items:center">
+            <div style="flex:1;min-width:0">
+              <div class="dmn" style="font-size:12.5px">GamerVault <span class="chk">✓</span> <span class="lvb" data-lv="27"></span></div>
+              <div class="dmmt" style="margin-top:3px">👍 98.58% · ⚡ 15 Min</div>
+            </div>
+            <div style="text-align:right;flex:none"><div class="dmp" style="font-size:13px">$39.69</div><div class="dmb" style="margin-top:4px;padding:5px 12px;font-size:11px">Buy</div></div>
+          </div>
+          <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:10px;align-items:center">
+            <div style="flex:1;min-width:0">
+              <div class="dmn" style="font-size:12.5px">TheFlash24.7 <span class="chk">✓</span> <span class="lvb" data-lv="120"></span></div>
+              <div class="dmmt" style="margin-top:3px">👍 98.65% · ⚡ 10 Min</div>
+            </div>
+            <div style="text-align:right;flex:none"><div class="dmp" style="font-size:13px">$41.10</div><div class="dmb" style="margin-top:4px;padding:5px 12px;font-size:11px">Buy</div></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  <div class="notelist"><h4>设计标注</h4><ol></ol></div>
+  <div class="callout warn"><b>必须一并修掉的历史问题：</b>现在的 LV 徽章是黄/蓝/红三色，颜色与等级高低无关——最高的 LV 27 反而是红色。买家默认颜色代表好坏，这套色板正在传错信息。</div>
+  <div class="callout">排序建议：默认排序不动（按价格）。后续要加排序项就加 Top Rated，<b>不要加「按等级排序」</b>——一旦等级能直接换流量，刷分的收益会超过做好服务的收益。</div>
+</div></section>
+
+<!-- ===== p3 ===== -->
+<section class="view" id="v-p3"><div class="wrap">
+  <div class="stage-k">03 · 金币列表页</div>
+  <div class="stage-t">推荐位和表格行，都放在卖家名之后</div>
+  <div class="stage-d">这一页卖家信息已经很全：Member since、Total Orders、Rating、Reviews。等级插在名字行，和这些统计量分工——<b>名字行给结论，下方给证据</b>。顶部「KYC-Verified Sellers Only」是全员准入门槛，和分级信号不放同一行。</div>
+  <div class="pcrow">
+    <div><div class="mlabel">PC</div>
+      <div class="mock"><div class="mbar"><i></i><i></i><i></i><u>igv.com/fc-26-coins</u></div><div class="mbody">
+        <div class="sfeat"><span class="ftag">👍 Featured</span>
+          <div class="srow">
+            <div class="sid"><div class="sav">MC</div><div style="min-width:0">
+              <div class="snm anno" data-note="推荐位和表格行用同一个尺寸的徽章，不做大小分级——这一页只有一种形态">myfutcoins <span style="color:#F2662B">🏅</span> <span class="lvb dyn"></span></div>
+              <div class="smeta">Member since: Jan 9th, 2026</div></div>
+            </div>
+            <div><div class="ssk">Delivery Time</div><div class="ssv">3 Min / 24 Hours</div></div>
+            <div><div class="ssk">Rating</div><div class="ssv">👍 98.36% · 250 Reviews</div></div>
+            <div style="text-align:right"><div class="po"><sup>$</sup>2.49</div><div class="ps">$0.00249/K</div></div>
+          </div>
+          <div class="buy" style="margin-top:12px">Buy Now</div>
+        </div>
+        <div class="slist">
+          <div class="thead"><span>Sellers</span><span>Delivery Time</span><span>Amount</span><span>Price</span></div>
+          <div class="trow"><div class="srow">
+            <div class="sid"><div class="sav">UT</div><div style="min-width:0">
+              <div class="snm">TT coin speed <span style="color:#F2662B">🏅</span> <span class="lvb" data-lv="120"></span></div>
+              <div class="smeta">📋 1,727 · 👍 96.48% · 761 Reviews</div></div></div>
+            <div class="ssv">14 Min / 3 Hours</div><div class="ssv">1000 K</div>
+            <div style="text-align:right"><div class="po"><sup>$</sup>3.78</div><div class="ps">$0.00378/K</div></div>
+          </div></div>
+          <div class="trow"><div class="srow">
+            <div class="sid"><div class="sav">ST</div><div style="min-width:0">
+              <div class="snm">ST Games <span style="color:#F2662B">🏅</span> <span class="lvb" data-lv="16"></span></div>
+              <div class="smeta">📋 340 · 👍 100.00% · 88 Reviews</div></div></div>
+            <div class="ssv">45 Min / 24 Hours</div><div class="ssv">1000 K</div>
+            <div style="text-align:right"><div class="po"><sup>$</sup>3.42</div><div class="ps">$0.00342/K</div></div>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+    <div><div class="mlabel">H5</div>
+      <div class="phone"><div class="top"><span>9:41</span><span>▮▮▮</span></div><div class="pbody">
+        <div class="h5card anno" data-note="H5 每个卖家一张卡。徽章仍然贴在名字后，不换行、不移到卡片角落——买家在两端形成的是同一个阅读习惯" style="border-color:#FBD9C6;background:#FFF7F3">
+          <div class="h5top"><div class="sav" style="width:32px;height:32px">MC</div><div style="min-width:0;flex:1">
+            <div class="snm" style="font-size:13.5px">myfutcoins <span style="color:#F2662B">🏅</span> <span class="lvb dyn"></span></div>
+            <div class="smeta">👍 98.36% · 250 Reviews</div></div>
+            <span style="background:#EF4B3C;color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;flex:none">Featured</span>
+          </div>
+          <div class="h5kv"><span>Delivery</span><span style="color:var(--ink)">3 Min / 24 Hours</span></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+            <div style="flex:1"><span class="po" style="font-size:17px"><sup>$</sup>2.49</span> <span class="ps">/1000K</span></div>
+            <div class="buy" style="flex:none;padding:7px 18px">Buy</div>
+          </div>
+        </div>
+        <div class="h5card">
+          <div class="h5top"><div class="sav" style="width:32px;height:32px">UT</div><div style="min-width:0;flex:1">
+            <div class="snm" style="font-size:13.5px">TT coin speed <span style="color:#F2662B">🏅</span> <span class="lvb" data-lv="120"></span></div>
+            <div class="smeta">👍 96.48% · 761 Reviews</div></div>
+          </div>
+          <div class="h5kv"><span>Delivery</span><span style="color:var(--ink)">14 Min / 3 Hours</span></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+            <div style="flex:1"><span class="po" style="font-size:17px"><sup>$</sup>3.78</span> <span class="ps">/1000K</span></div>
+            <div class="buy g" style="flex:none;padding:7px 18px">Buy</div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  <div class="notelist"><h4>设计标注</h4><ol></ol></div>
+  <div class="callout">看第三行 ST Games：好评率 100%、价格更低，但只有 Lv.16。等级不覆盖价格和好评率的作用，只是多给买家一个维度——新卖家照样能凭价格被选中。</div>
+</div></section>
+
+<!-- ===== p4 ===== -->
+<section class="view" id="v-p4"><div class="wrap">
+  <div class="stage-k">04 · 账号列表页</div>
+  <div class="stage-t">不展示——卡片的主语不是卖家</div>
+  <div class="stage-d">这一页的卡片从头到尾在讲一个商品：多少皮肤、什么平台、多少钱，没有卖家名，也放不下。买家在这一屏筛的是「哪个号我想要」，卖家是下一步的问题。PC 和 H5 都保持现状。</div>
+  <div class="grid2">
+    <div><div class="mlabel" style="color:var(--danger)">不要这样做</div>
+      <div style="max-width:300px;border:1px solid var(--line);border-radius:10px;overflow:hidden">
+        <div style="height:88px;background:linear-gradient(135deg,#3B2E6E,#5B3F86)"></div>
+        <div style="padding:11px 12px">
+          <div style="font-size:13px;font-weight:600;line-height:1.5">[PC/PSN/XBOX] 44 skins | Black Knight | The Reaper…</div>
+          <div style="display:flex;gap:8px;font-size:11.5px;margin-top:8px;align-items:center;flex-wrap:wrap">
+            <span style="color:#F2662B;font-weight:600">◈ Verified</span><span style="color:var(--line)">|</span>
+            <span style="color:var(--blue);font-weight:600">⚡ Delivery</span><span style="color:var(--line)">|</span>
+            <span class="lvb t-premium">Lv.57</span></div>
+          <div style="border-top:1px solid var(--line2);margin-top:10px;padding-top:9px;display:flex;justify-content:space-between"><span style="font-size:11.5px;color:var(--ink2)">▤ OG Account</span><span style="font-size:17px;font-weight:700">$199.00</span></div>
+        </div>
+      </div>
+      <p class="p" style="margin-top:10px;font-size:12.5px"><b>主语混了。</b>这一行里 Verified 说的是「账号已核验」、Delivery 说的是「商品自动发货」，都在讲商品；突然接一个讲卖家的 Lv.57，买家很可能读成「这个账号是 57 级」。$199 客单价上这种误读会变成售后。</p>
+    </div>
+    <div><div class="mlabel" style="color:var(--good)">保持现状</div>
+      <div style="max-width:300px;border:1px solid var(--line);border-radius:10px;overflow:hidden">
+        <div style="height:88px;background:linear-gradient(135deg,#3B2E6E,#5B3F86)"></div>
+        <div style="padding:11px 12px">
+          <div style="font-size:13px;font-weight:600;line-height:1.5">[PC/PSN/XBOX] 44 skins | Black Knight | The Reaper…</div>
+          <div style="display:flex;gap:8px;font-size:11.5px;margin-top:8px;align-items:center">
+            <span style="color:#F2662B;font-weight:600">◈ Verified</span><span style="color:var(--line)">|</span>
+            <span style="color:var(--blue);font-weight:600">⚡ Delivery</span></div>
+          <div style="border-top:1px solid var(--line2);margin-top:10px;padding-top:9px;display:flex;justify-content:space-between"><span style="font-size:11.5px;color:var(--ink2)">▤ OG Account</span><span style="font-size:17px;font-weight:700">$199.00</span></div>
+        </div>
+      </div>
+      <p class="p" style="margin-top:10px;font-size:12.5px">卡片不动。等级在这一页<b>以排序权重的方式起作用</b>：同等条件下高等级卖家的商品在 Best Match 里排得更前。买家不需要知道原因，但拿到了更好的结果。</p>
+    </div>
+  </div>
+  <div class="callout">如果账号品类后续坚持要展示，唯一可接受的做法是<b>单独起一行、显式带 Seller 主语</b>（<span style="font-size:11.5px;color:var(--ink3)">▪ Seller　Mr.Pick <span class="lvb t-premium">Lv.57</span></span>），而不是塞进商品属性行。代价是卡片增高、一屏商品数减少，建议做 A/B。</div>
+</div></section>
+
+<!-- ===== p5 ===== -->
+<section class="view" id="v-p5"><div class="wrap">
+  <div class="stage-k">05 · 账号详情页</div>
+  <div class="stage-t">卖家模块：只跟在店铺名后面</div>
+  <div class="stage-d">这个模块是买家在整站唯一一次专门评估「这个人」的时刻。等级<b>只跟在店铺名后面，不在下方数据行里重复一遍</b>——同一个信息在一张卡片里出现两次，会让买家以为是两个不同的东西。下方三行保持原样，讲的是明细：Member since、Seller Rating、Total Orders。</div>
+  <div class="pcrow">
+    <div><div class="mlabel">PC</div>
+      <div class="mock"><div class="mbar"><i></i><i></i><i></i><u>igv.com/fortnite-accounts/…</u></div><div class="mbody" style="background:var(--sunk)">
+        <div class="sbox" style="max-width:420px;background:#fff">
+          <div class="sbhd"><div class="sbav">PICK</div>
+            <div style="min-width:0"><div class="sbnm anno" data-note="名字行的徽章和列表页完全一致——买家在列表页认得的那个，在这里必须还是同一个。想进一步了解这个卖家，走右侧 Store 按钮">Mr.Pick <span style="color:#F2662B">🏅</span> <span class="lvb dyn"></span></div>
+            <div class="sbsince">Member since: Nov 17th, 2023</div></div>
+            <div class="sbstore">▤ Store</div>
+          </div>
+          <div style="height:12px"></div>
+          <div class="sbrow"><span class="k">☆ Seller Rating ›</span><span class="v">746 Reviews　4.9 ★</span></div>
+          <div class="sbrow"><span class="k">📋 Total Orders</span><span class="v">1779 Sold</span></div>
+        </div>
+      </div></div>
+    </div>
+    <div><div class="mlabel">H5</div>
+      <div class="phone"><div class="top"><span>9:41</span><span>▮▮▮</span></div><div class="pbody">
+        <div style="height:96px;border-radius:8px;background:linear-gradient(135deg,#3B2E6E,#5B3F86);display:grid;place-items:center;color:rgba(255,255,255,.5);font-size:11px">商品图</div>
+        <div style="font-size:19px;font-weight:700;margin:10px 0 4px">$199.00</div>
+        <div class="sbox anno" data-note="H5 卖家模块整体折叠为一张卡，Store 按钮下移到卡底通栏；徽章位置与 PC 一致，同样不重复展示" style="margin-top:10px;padding:12px 13px">
+          <div class="sbhd"><div class="sbav" style="width:34px;height:34px;font-size:9px">PICK</div>
+            <div style="min-width:0"><div class="sbnm" style="font-size:14px">Mr.Pick <span style="color:#F2662B">🏅</span> <span class="lvb dyn"></span></div>
+            <div class="sbsince">Member since: Nov 2023</div></div>
+          </div>
+          <div class="sbrow" style="padding:9px 0;font-size:12.5px;margin-top:8px"><span class="k">Seller Rating</span><span class="v">4.9 ★ · 746</span></div>
+          <div class="sbrow" style="padding:9px 0;font-size:12.5px"><span class="k">Total Orders</span><span class="v">1779 Sold</span></div>
+          <div class="buy g" style="margin-top:10px;padding:8px">▤ Visit Store</div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  <div class="notelist"><h4>设计标注</h4><ol></ol></div>
+</div></section>
+
+<!-- ===== p6 ===== -->
+<section class="view" id="v-p6"><div class="wrap">
+  <div class="stage-k">06 · 物品列表页</div>
+  <div class="stage-t">不展示——一张卡背后是 11 个卖家</div>
+  <div class="stage-d">POE 货币列表是 SPU 聚合页，「11 Offers」意味着卡片背后站着 11 个不同等级的卖家。任何贴在卡上的等级都必然是错的：取最高，那个人的报价可能不是 From 的那个价，等于骗点击；取最低价卖家的，价格一变徽章就跳；取平均，买家读不懂。</div>
+  <div class="pcrow">
+    <div><div class="mlabel">PC / H5 均保持现状</div>
+      <div style="max-width:330px;border:1px solid var(--line);border-radius:10px;padding:14px">
+        <div style="font-size:13.5px;font-weight:600">[PC]Allflame Standard-Divine Orb</div>
+        <div style="display:inline-block;background:var(--sunk);color:var(--ink2);border-radius:4px;padding:2px 8px;font-size:11px;margin-top:8px">Category: Currency&gt;Divine Orb</div>
+        <div style="margin-top:12px;padding-top:11px;border-top:1px solid var(--line2);display:flex;justify-content:space-between;align-items:flex-end">
+          <div><div style="font-size:11px;color:var(--ink3)">From</div><div style="font-size:19px;font-weight:700">$0.06</div></div>
+          <span style="background:#F2662B;color:#fff;font-size:11px;border-radius:4px;padding:2px 7px;font-weight:600">11 Offers</span>
+        </div>
+      </div>
+    </div>
+    <div style="padding-top:26px">
+      <p class="p">买家点进标品详情页后立刻会看到全部 11 个卖家和各自的等级——那才是需要比较「人」的一屏，而且信息完整、可归属。</p>
+      <p class="p">这一页等级同样以<b>排序权重</b>生效：决定标品详情页里谁进推荐位、谁排第一行。</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- ===== p7 ===== -->
+<section class="view" id="v-p7"><div class="wrap">
+  <div class="stage-k">07 · 物品标品详情页</div>
+  <div class="stage-t">与金币列表页共用同一套</div>
+  <div class="stage-d">结构完全一致：一个推荐位 + 一张卖家表。展示规则必须一样——买家在两个品类之间切换时，不该重新学一遍徽章在哪。这里只标注品类差异带来的细节。</div>
+  <div class="pcrow">
+    <div><div class="mlabel">PC</div>
+      <div class="mock"><div class="mbar"><i></i><i></i><i></i><u>igv.com/poe/currency/chaos-orb</u></div><div class="mbody">
+        <div class="sfeat"><span class="ftag">👍 Featured</span>
+          <div class="srow">
+            <div class="sid"><div class="sav">⚡</div><div style="min-width:0">
+              <div class="snm anno" data-note="Chrismatter 100% 好评但只有 274 单。等级把「久」和「稳」补进来，正好回答买家「样本这么小，这个 100% 算数吗」">Chrismatter <span style="color:#F2662B">🏅</span> <span class="lvb dyn"></span></div>
+              <div class="smeta">Member since: Oct 29th, 2023</div></div></div>
+            <div><div class="ssk">Delivery Time</div><div class="ssv">10 Min</div></div>
+            <div><div class="ssk">Rating</div><div class="ssv">👍 100.00% · 101 Reviews</div></div>
+            <div style="text-align:right"><div class="po"><sup>$</sup>0.10</div><div class="ps">$0.0001999/Unit</div></div>
+          </div>
+          <div class="buy" style="margin-top:12px">Buy Now</div>
+        </div>
+        <div class="slist">
+          <div class="thead"><span>Sellers</span><span>Delivery Time</span><span>Amount</span><span>Price</span></div>
+          <div class="trow"><div class="srow">
+            <div class="sid"><div class="sav">🎮</div><div style="min-width:0">
+              <div class="snm anno" data-note="16,304 单、Lv.120，两个数字互相印证。如果出现「单数高但等级低」，说明近期退款纠纷多——这正是等级相对成交量的增量信息">TheFlash24.7 <span style="color:#F2662B">🏅</span> <span class="lvb" data-lv="120"></span></div>
+              <div class="smeta">📋 16,304 · 👍 98.65% · 4,281 Reviews</div></div></div>
+            <div class="ssv">10 Min</div><div class="ssv">500 Unit</div>
+            <div style="text-align:right"><div class="po"><sup>$</sup>0.10</div><div class="ps">$0.0002/Unit</div></div>
+          </div></div>
+          <div class="trow"><div class="srow">
+            <div class="sid"><div class="sav">🛡</div><div style="min-width:0">
+              <div class="snm">Integrity Business <span style="color:#F2662B">🏅</span> <span class="lvb" data-lv="240"></span></div>
+              <div class="smeta">📋 6,231 · 👍 96.59% · 1,702 Reviews</div></div></div>
+            <div class="ssv">1 Min ⚡</div><div class="ssv">500 Unit</div>
+            <div style="text-align:right"><div class="po"><sup>$</sup>0.16</div><div class="ps">$0.000316/Unit</div></div>
+          </div></div>
+        </div>
+      </div></div>
+    </div>
+    <div><div class="mlabel">H5</div>
+      <div class="phone"><div class="top"><span>9:41</span><span>▮▮▮</span></div><div class="pbody">
+        <div class="h5card" style="border-color:#FBD9C6;background:#FFF7F3">
+          <div class="h5top"><div class="sav" style="width:32px;height:32px">⚡</div><div style="min-width:0;flex:1">
+            <div class="snm" style="font-size:13.5px">Chrismatter <span style="color:#F2662B">🏅</span> <span class="lvb dyn"></span></div>
+            <div class="smeta">👍 100% · 101 Reviews · 10 Min</div></div>
+            <span style="background:#EF4B3C;color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;flex:none">Featured</span></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+            <div style="flex:1"><span class="po" style="font-size:17px"><sup>$</sup>0.10</span> <span class="ps">/500 Unit</span></div>
+            <div class="buy" style="flex:none;padding:7px 18px">Buy</div></div>
+        </div>
+        <div class="h5card anno" data-note="物品品类卖家名普遍更长。H5 上名字先省略，徽章始终保留在名字右侧同一行">
+          <div class="h5top"><div class="sav" style="width:32px;height:32px">🛡</div><div style="min-width:0;flex:1">
+            <div class="snm" style="font-size:13.5px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px">Integrity Business</span> <span style="color:#F2662B">🏅</span> <span class="lvb" data-lv="240"></span></div>
+            <div class="smeta">👍 96.59% · 1,702 Reviews · 1 Min</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+            <div style="flex:1"><span class="po" style="font-size:17px"><sup>$</sup>0.16</span> <span class="ps">/500 Unit</span></div>
+            <div class="buy g" style="flex:none;padding:7px 18px">Buy</div></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  <div class="notelist"><h4>设计标注</h4><ol></ol></div>
+  <p class="p" style="max-width:860px">推荐位的 Best Price 角标和等级徽章分处卡片左右两侧，<b>不要为了对齐放到同一行</b>——一个讲价格、一个讲卖家，同排会让买家以为「Best Price 是这个等级带来的」。</p>
+</div></section>
+
+<!-- ===== p10 ===== -->
+<section class="view" id="v-p10"><div class="wrap">
+  <div class="stage-k">08 · 卖家店铺页</div>
+  <div class="stage-t">等级进数据栏，和成交单数、好评率并列</div>
+  <div class="stage-d">店铺页是卖家的门面，等级在这里应该是<b>一项可读的经营数据</b>，不是挂在头像上的一块奖牌。所以放两处：名字行跟一个徽章（保持全站一致，让买家认得是同一个东西），数据栏里单独占一格。头像位不动。<br>这一页是<b>全站唯一带出段位名的地方</b>——买家在商品页看到颜色和数字，点进店铺才知道那个绿色叫 Premium。</div>
+  <div class="mlabel">PC</div>
+  <div class="mock" style="margin-bottom:14px"><div class="mbar"><i></i><i></i><i></i><u>igv.com/store/mr-pick</u></div><div class="mbody" style="background:var(--sunk);padding:14px">
+    <div class="shop" style="background:#fff">
+      <div class="shopbanner"></div>
+      <div class="shophd">
+        <div class="shopav anno" data-note="头像位保持原样，不加大徽章、不加角标——那会让店铺页看起来像在给卖家发奖，而不是给买家看数据">PICK</div>
+        <div style="min-width:0">
+          <div class="shopnm">Mr.Pick <span style="color:#F2662B;font-size:14px">🏅</span> <span class="lvb lg dyn"></span></div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:2px">Member since Nov 17th, 2023 · Response &lt; 5 Min</div>
+        </div>
+      </div>
+      <div class="shopstats">
+        <div class="shopstat lv anno" data-note="等级作为一项经营数据，和成交单数、好评率并列。这一格带出段位名，其余页面只有颜色和数字">
+          <div class="k">Seller Level</div><div class="v"><span class="lvb lg full dyn"></span></div>
+        </div>
+        <div class="shopstat"><div class="k">Total Orders</div><div class="v">1,779</div></div>
+        <div class="shopstat"><div class="k">Positive Rating</div><div class="v">98.6%</div></div>
+        <div class="shopstat"><div class="k">Reviews</div><div class="v">746</div></div>
+      </div>
+    </div>
+  </div></div>
+  <div class="pcrow">
+    <div><div class="mlabel">说明</div>
+      <p class="p">买家的路径是收敛的：商品页看到颜色和数字 → 想了解这个人就点进店铺页 → 在数据栏看到完整的段位名。不需要在商品页做悬停解释。</p>
+      <p class="p">对卖家而言，这一页也是等级唯一的对外门面：可分享、可放进社群签名。成本很低，但会明显提升卖家对等级体系的认同。</p>
+      <p class="p"><b>不做的：</b>不放升级进度条、不放距离下一级还差多少分、不放信用分——那些是卖家后台的内容，买家看到只会困惑。</p>
+    </div>
+    <div><div class="mlabel">H5</div>
+      <div class="phone"><div class="top"><span>9:41</span><span>▮▮▮</span></div><div class="pbody" style="padding:0">
+        <div style="height:64px;background:linear-gradient(100deg,#2C3E63,#41567F)"></div>
+        <div style="padding:0 13px 12px;display:flex;gap:11px;align-items:flex-end;margin-top:-20px">
+          <div class="shopav" style="width:52px;height:52px;font-size:10px">PICK</div>
+          <div style="min-width:0;padding-bottom:2px">
+            <div class="shopnm" style="font-size:15px">Mr.Pick <span style="color:#F2662B;font-size:12px">🏅</span> <span class="lvb dyn"></span></div>
+            <div style="font-size:11px;color:var(--ink3)">Member since Nov 2023</div>
+          </div>
+        </div>
+        <div class="h5stats anno" data-note="H5 数据栏改 2×2 宫格，Seller Level 占左上第一格，其余顺序不变">
+          <div><div style="font-size:11px;color:var(--ink3)">Seller Level</div><div style="margin-top:4px"><span class="lvb lg full dyn"></span></div></div>
+          <div><div style="font-size:11px;color:var(--ink3)">Total Orders</div><div style="font-size:16px;font-weight:600;margin-top:4px">1,779</div></div>
+          <div><div style="font-size:11px;color:var(--ink3)">Positive Rating</div><div style="font-size:16px;font-weight:600;margin-top:4px">98.6%</div></div>
+          <div><div style="font-size:11px;color:var(--ink3)">Reviews</div><div style="font-size:16px;font-weight:600;margin-top:4px">746</div></div>
+        </div>
+        <div style="padding:12px 13px"><div style="font-size:12.5px;font-weight:600">Products</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+            <div style="border:1px solid var(--line);border-radius:8px;height:78px"></div>
+            <div style="border:1px solid var(--line);border-radius:8px;height:78px"></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  <div class="notelist"><h4>设计标注</h4><ol></ol></div>
+</div></section>
+
+</main>
+</div>
+<script>
+var LV=57;
+var TIERS=[[20,'starter','Starter'],[50,'growing','Growing'],[100,'premium','Premium'],[200,'top','Top'],[1e9,'elite','Elite']];
+function tierOf(lv){for(var i=0;i<TIERS.length;i++){if(lv<=TIERS[i][0])return TIERS[i];}}
+function renderBadges(){
+  document.querySelectorAll('.lvb').forEach(function(el){
+    var fixed=el.getAttribute('data-lv');
+    if(!fixed && !el.classList.contains('dyn')) return;
+    var lv=fixed?+fixed:LV;
+    var lg=el.classList.contains('lg'), dyn=el.classList.contains('dyn'), full=el.classList.contains('full');
+    var t=tierOf(lv);
+    el.className='lvb'+(lg?' lg':'')+(full?' full':'')+(dyn?' dyn':'')+' t-'+t[1];
+    el.innerHTML=full?('<span class="tn">'+t[2]+'</span>Lv.'+lv):('Lv.'+lv);
+  });
+}
+function renderNotes(v){
+  v.querySelectorAll('.pin').forEach(function(p){p.remove()});
+  var list=v.querySelector('.notelist ol'); if(list)list.innerHTML='';
+  var i=0;
+  v.querySelectorAll('.anno[data-note]').forEach(function(el){
+    if(el.offsetParent===null)return; i++;
+    var pin=document.createElement('span');pin.className='pin';pin.textContent=i;el.appendChild(pin);
+    if(list){var li=document.createElement('li');li.textContent=el.getAttribute('data-note');list.appendChild(li);}
+  });
+  var nl=v.querySelector('.notelist'); if(nl)nl.style.display=i?'':'none';
+}
+function refresh(){renderBadges();var v=document.querySelector('.view.on');if(v)renderNotes(v);}
+document.querySelectorAll('.rail-btn').forEach(function(b){b.onclick=function(){
+  document.querySelectorAll('.rail-btn').forEach(function(x){x.classList.remove('on')});b.classList.add('on');
+  document.querySelectorAll('.view').forEach(function(x){x.classList.remove('on')});
+  document.getElementById('v-'+b.dataset.v).classList.add('on');window.scrollTo(0,0);refresh();};});
+document.querySelectorAll('#segLv button').forEach(function(b){b.onclick=function(){
+  document.querySelectorAll('#segLv button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');LV=+b.dataset.lv;refresh();};});
+document.querySelectorAll('#segNote button').forEach(function(b){b.onclick=function(){
+  document.querySelectorAll('#segNote button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');
+  document.body.className=b.dataset.note==='on'?'noteon':'noteoff';refresh();};});
+refresh();
+</script>
+</body>
+</html>
